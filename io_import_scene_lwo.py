@@ -1403,7 +1403,13 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 			elif (num_image_textures_curr_material == 2):
 				# create a mixRGB node and set it to Multiply
 				mix_rgb_node = curr_material.node_tree.nodes.new('ShaderNodeMixRGB')
-				mix_rgb_node.blend_type = "MULTIPLY"
+
+				#opactype 7 means blend mode should be add usually for Shadow of the Colossus glowing Sigils
+				if texture.opactype == 7:
+					mix_rgb_node.blend_type = "ADD"
+				else:
+					mix_rgb_node.blend_type = "MULTIPLY"
+
 				#first image texture to be created has the Node Name "Image Texture" by default
 				image_texture_node_1 = nodes["Image Texture"]
 				image_texture_node_2 = image_texture_node_to_load
@@ -1528,28 +1534,28 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 
 			#-----------------Purged because not a thing in blender 3.0
 			# https://en.wikipedia.org/wiki/Blend_modes https://en.wikipedia.org/wiki/Blend_modes 
-			if texture.opactype == 0: # Normal (only this? 'overlay')
-				pass
-				# image_texture_node.blend_type = 'MIX'
-			elif texture.opactype == 1: # Subtractive
-				pass
-				# image_texture_node.blend_type = 'SUBTRACT'
-			elif texture.opactype == 2: # Difference
-				pass
-				#image_texture_node.blend_type = 'DIFFERENCE'
-			elif texture.opactype == 3: # Multiply
-				pass
-				#image_texture_node.blend_type = 'MULTIPLY'
-			elif texture.opactype == 4: # Divide
-				pass
-				#image_texture_node.blend_type = 'DIVIDE'
-			#elif texture.opactype == 5: # Alpha  Alpha opacity uses the current layer as an alpha channel. The previous layers are visible where the current layer is white and transparent where the current layer is black. 
-			#	tex_slot.blend_type = '' ?
-			#elif texture.opactype == 6: #Texture Displacement  Texture Displacement distorts the underlying layers. 
-			#	tex_slot.blend_type = '' ?
-			elif texture.opactype == 7: # Additive
-				pass
-				#image_texture_node.blend_type = 'ADD'
+			# if texture.opactype == 0: # Normal (only this? 'overlay')
+			# 	pass
+			# 	# image_texture_node.blend_type = 'MIX'
+			# elif texture.opactype == 1: # Subtractive
+			# 	pass
+			# 	# image_texture_node.blend_type = 'SUBTRACT'
+			# elif texture.opactype == 2: # Difference
+			# 	pass
+			# 	#image_texture_node.blend_type = 'DIFFERENCE'
+			# elif texture.opactype == 3: # Multiply
+			# 	pass
+			# 	#image_texture_node.blend_type = 'MULTIPLY'
+			# elif texture.opactype == 4: # Divide
+			# 	pass
+			# 	#image_texture_node.blend_type = 'DIVIDE'
+			# #elif texture.opactype == 5: # Alpha  Alpha opacity uses the current layer as an alpha channel. The previous layers are visible where the current layer is white and transparent where the current layer is black. 
+			# #	tex_slot.blend_type = '' ?
+			# #elif texture.opactype == 6: #Texture Displacement  Texture Displacement distorts the underlying layers. 
+			# #	tex_slot.blend_type = '' ?
+			# elif texture.opactype == 7: # Additive
+			# 	pass
+			# 	#image_texture_node.blend_type = 'ADD'
 
 			
 			# if texture.axis == 0: # The following may be absolutelly wrong and if so, sorry. Maybe this should only be done for some wrapping modes. It gives bad results with my input files, so maybe they are incorrector this is.

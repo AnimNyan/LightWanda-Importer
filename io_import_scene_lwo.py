@@ -1333,7 +1333,9 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 		# #translation of surf_data.bl_mat.specular_hardness = int(4*((10*surf_data.glos)*(10*surf_data.glos)))+4
 		# #guessing specular hardness which is supposed to specular highlight size is equivalent to inverse of roughness
 		# principled_bsdf_node.inputs["Roughness"].default_value = 1 - int(4*((10*surf_data.glos)*(10*surf_data.glos)))+4
-		
+
+		#hardcode the roughness to 1 as most materials in Shadow of the Colossus are not reflective at all
+		principled_bsdf_node.inputs["Roughness"].default_value = 1
 		surf_data.textures.reverse()
 
 		# if surf_data.tran != 0.0:
@@ -1922,6 +1924,11 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 			ob_dict[ob_key][0].location -= parent_ob[0].location
 		elif len(ob_dict.keys()) > 1:
 			ob_dict[ob_key][0].parent = empty
+
+	#as a final step shade smooth
+	#shade smooth on the mesh
+	for f in me.polygons:
+		f.use_smooth = True
 			
 			
 	# bpy.context.scene.update()

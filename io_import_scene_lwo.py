@@ -1283,15 +1283,17 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 		
 
 		principled_bsdf_node = curr_material.node_tree.nodes["Principled BSDF"]
-		principled_bsdf_node.inputs["Base Color"].default_value = (0.8, 0.172372, 0.0543763, 1)
 
-		#Nyan: Give an alpha position into tuple, because diffuse_color requires a fourth alpha value
-		#+= (x, ) adds a fourth item to the tuple for some reason the alpha value is surf_data.diff
-		surf_data.colr += (surf_data.diff, )
 
-		principled_bsdf_node.inputs["Base Color"].default_value = (surf_data.colr[:])
-		principled_bsdf_node.inputs["Emission Strength"].default_value = surf_data.lumi
-		principled_bsdf_node.inputs["Specular"].default_value = surf_data.spec
+		# principled_bsdf_node.inputs["Base Color"].default_value = (0.8, 0.172372, 0.0543763, 1)
+
+		# #Nyan: Give an alpha position into tuple, because diffuse_color requires a fourth alpha value
+		# #+= (x, ) adds a fourth item to the tuple for some reason the alpha value is surf_data.diff
+		# surf_data.colr += (surf_data.diff, )
+
+		# principled_bsdf_node.inputs["Base Color"].default_value = (surf_data.colr[:])
+		# principled_bsdf_node.inputs["Emission Strength"].default_value = surf_data.lumi
+		# principled_bsdf_node.inputs["Specular"].default_value = surf_data.spec
 
 		# outdated material settings when principled bsdf did not exist
 		# surf_data.bl_mat.diffuse_color = (surf_data.colr[:])
@@ -1322,15 +1324,15 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 		# if surf_data.tran != 0.0:
 		# 	bpy.context.object.active_material.blend_method = 'HASHED'
 
-		# surf_data.bl_mat.alpha = 1.0 - surf_data.tran
-		principled_bsdf_node.inputs["Alpha"].default_value = 1.0 - surf_data.tran
+		# # surf_data.bl_mat.alpha = 1.0 - surf_data.tran
+		# principled_bsdf_node.inputs["Alpha"].default_value = 1.0 - surf_data.tran
 
-		#translation of this surf_data.bl_mat.translucency = surf_data.trnl
-		principled_bsdf_node.inputs["Transmission"].default_value = surf_data.trnl
+		# #translation of this surf_data.bl_mat.translucency = surf_data.trnl
+		# principled_bsdf_node.inputs["Transmission"].default_value = surf_data.trnl
 
-		#translation of surf_data.bl_mat.specular_hardness = int(4*((10*surf_data.glos)*(10*surf_data.glos)))+4
-		#guessing specular hardness which is supposed to specular highlight size is equivalent to inverse of roughness
-		principled_bsdf_node.inputs["Roughness"].default_value = 1 - int(4*((10*surf_data.glos)*(10*surf_data.glos)))+4
+		# #translation of surf_data.bl_mat.specular_hardness = int(4*((10*surf_data.glos)*(10*surf_data.glos)))+4
+		# #guessing specular hardness which is supposed to specular highlight size is equivalent to inverse of roughness
+		# principled_bsdf_node.inputs["Roughness"].default_value = 1 - int(4*((10*surf_data.glos)*(10*surf_data.glos)))+4
 		
 		surf_data.textures.reverse()
 

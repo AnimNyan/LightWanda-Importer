@@ -1287,13 +1287,13 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 
 		# principled_bsdf_node.inputs["Base Color"].default_value = (0.8, 0.172372, 0.0543763, 1)
 
-		# #Nyan: Give an alpha position into tuple, because diffuse_color requires a fourth alpha value
-		# #+= (x, ) adds a fourth item to the tuple for some reason the alpha value is surf_data.diff
-		# surf_data.colr += (surf_data.diff, )
+		#Nyan: Give an alpha position into tuple, because diffuse_color requires a fourth alpha value
+		#+= (x, ) adds a fourth item to the tuple for some reason the alpha value is surf_data.diff
+		surf_data.colr += (surf_data.diff, )
 
-		# principled_bsdf_node.inputs["Base Color"].default_value = (surf_data.colr[:])
-		# principled_bsdf_node.inputs["Emission Strength"].default_value = surf_data.lumi
-		# principled_bsdf_node.inputs["Specular"].default_value = surf_data.spec
+		principled_bsdf_node.inputs["Base Color"].default_value = (surf_data.colr[:])
+		principled_bsdf_node.inputs["Emission Strength"].default_value = surf_data.lumi
+		principled_bsdf_node.inputs["Specular"].default_value = surf_data.spec
 
 		# outdated material settings when principled bsdf did not exist
 		# surf_data.bl_mat.diffuse_color = (surf_data.colr[:])
@@ -1321,21 +1321,57 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 		# surf_data.bl_mat.raytrace_mirror.reflect_factor = surf_data.refl
 		# surf_data.bl_mat.raytrace_mirror.gloss_factor = 1.0-surf_data.rblr
 
-		# if surf_data.tran != 0.0:
-		# 	bpy.context.object.active_material.blend_method = 'HASHED'
+		#by default assume material is not fur
+		#correct if needed
+		is_fur_material = False
 
-		# # surf_data.bl_mat.alpha = 1.0 - surf_data.tran
-		# principled_bsdf_node.inputs["Alpha"].default_value = 1.0 - surf_data.tran
+		#if the material has transparency change it to alpha hashed
+		if surf_data.tran != 0.0:
+			curr_material.blend_method = 'HASHED'
+			curr_material.shadow_method = 'HASHED'
 
-		# #translation of this surf_data.bl_mat.translucency = surf_data.trnl
-		# principled_bsdf_node.inputs["Transmission"].default_value = surf_data.trnl
 
-		# #translation of surf_data.bl_mat.specular_hardness = int(4*((10*surf_data.glos)*(10*surf_data.glos)))+4
-		# #guessing specular hardness which is supposed to specular highlight size is equivalent to inverse of roughness
-		# principled_bsdf_node.inputs["Roughness"].default_value = 1 - int(4*((10*surf_data.glos)*(10*surf_data.glos)))+4
+			#if it is has transparency it is probably fur add the vertex color tinting to it
+			#create a vertex color node
+			vertex_color_node = curr_material.node_tree.nodes.new('ShaderNodeVertexColor')
+
+			#position x, y
+			vertex_color_node.location = (-800, 0)
+
+			#create a mixRGB node
+			mix_rgb_tint_node = curr_material.node_tree.nodes.new('ShaderNodeMixRGB')
+
+			mix_rgb_tint_node.blend_type = 'MULTIPLY'
+			mix_rgb_tint_node.inputs["Fac"].default_value = 1
+
+			material_link = curr_material.node_tree.links.new
+			material_link(vertex_color_node.outputs["Color"], mix_rgb_tint_node.inputs["Color2"])
+
+			material_link(mix_rgb_tint_node.outputs["Color"], principled_bsdf_node.inputs["Base Color"])
+
+			#-------------------------------------------------------NEED TO CHANGE IS HARDCODED 
+			#-------------------------------------------------------
+			#-------------------------------------------------------
+			#change the vertex color node to use the r vertex color 
+			vertex_color_node.layer_name = "r"
+			
+			#mark material for image texture to connect into the mix_rgb_tint_node
+			is_fur_material = True
+
+		# surf_data.bl_mat.alpha = 1.0 - surf_data.tran
+		principled_bsdf_node.inputs["Alpha"].default_value = 1.0 - surf_data.tran
+		
+		#translation of this surf_data.bl_mat.translucency = surf_data.trnl
+		principled_bsdf_node.inputs["Transmission"].default_value = surf_data.trnl
+
+		#translation of surf_data.bl_mat.specular_hardness = int(4*((10*surf_data.glos)*(10*surf_data.glos)))+4
+		#guessing specular hardness which is supposed to specular highlight size is equivalent to inverse of roughness
+		roughness = 1 - surf_data.glos
+
+		principled_bsdf_node.inputs["Roughness"].default_value = roughness
 
 		#hardcode the roughness to 1 as most materials in Shadow of the Colossus are not reflective at all
-		principled_bsdf_node.inputs["Roughness"].default_value = 1
+		#principled_bsdf_node.inputs["Roughness"].default_value = 1
 		surf_data.textures.reverse()
 
 		# if surf_data.tran != 0.0:
@@ -1380,7 +1416,6 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 
 			
 
-
 			#once an image texture is added add to the 
 			#current count of image textures on the material
 			num_image_textures_curr_material += 1
@@ -1396,12 +1431,34 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 			nodes = curr_material.node_tree.nodes
 
 			if (num_image_textures_curr_material == 1):
-				material_link(image_texture_node_to_load.outputs["Color"], principled_bsdf_node.inputs["Base Color"])
+				if is_fur_material:
+					material_link(image_texture_node_to_load.outputs["Color"], mix_rgb_tint_node.inputs["Color1"])
+				else:
+					material_link(image_texture_node_to_load.outputs["Color"], principled_bsdf_node.inputs["Base Color"])
 
-				#change settings to alpha hashed for everything
-				material_link(image_texture_node_to_load.outputs["Alpha"], principled_bsdf_node.inputs["Alpha"])
-				curr_material.blend_method = 'HASHED'
-				curr_material.shadow_method = 'HASHED'
+				#Deal with alpha by combining the alpha of the image texture and the alpha of the vertex colors
+
+				#create a mixrgb node to mix the vertex color zALPHA into the alpha of the image texture
+				alpha_mix_rgb_node = curr_material.node_tree.nodes.new('ShaderNodeMixRGB')
+				alpha_mix_rgb_node.blend_type = "MULTIPLY"
+				alpha_mix_rgb_node.inputs["Fac"].default_value = 1
+
+				vertex_color_node_2 = curr_material.node_tree.nodes.new('ShaderNodeVertexColor')
+
+				#position x, y
+				vertex_color_node_2.location = (-900, -200)
+
+				#-------------------------------------------------------NEED TO CHANGE IS HARDCODED 
+				#-------------------------------------------------------
+				#-------------------------------------------------------
+				# change the vertex color node to use the zALPHA vertex color 
+				vertex_color_node_2.layer_name = "zALPHA"
+
+				#link nodes to mixRGB and mixRGB to principled BSDF
+				material_link(vertex_color_node_2.outputs["Color"], alpha_mix_rgb_node.inputs["Color2"])
+
+				material_link(image_texture_node_to_load.outputs["Alpha"], alpha_mix_rgb_node.inputs["Color1"])
+				material_link(alpha_mix_rgb_node.outputs["Color"], principled_bsdf_node.inputs["Alpha"])
 
 
 			elif (num_image_textures_curr_material == 2):
@@ -1423,7 +1480,11 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 
 				#to mix it properly image texture 2 alpha output should go into Fac of the mixRGB node
 				material_link(image_texture_node_2.outputs["Alpha"], mix_rgb_node.inputs["Fac"])
-				material_link(mix_rgb_node.outputs["Color"], principled_bsdf_node.inputs["Base Color"])
+
+				if is_fur_material:
+					material_link(mix_rgb_node.outputs["Color"], mix_rgb_tint_node.inputs["Color1"])
+				else:
+					material_link(mix_rgb_node.outputs["Color"], principled_bsdf_node.inputs["Base Color"])
 
 			elif (num_image_textures_curr_material > 2):
 				print("Error: mat " , curr_material.name, " has more than 2 textures! Contact the plugin author!")
@@ -1860,7 +1921,7 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 				elif edge_sb in layer_data.edge_weights:
 					edge.crease = layer_data.edge_weights[edge_sb]
 
-		# Unfortunately we can't exlude certain faces from the subdivision.
+		# Unfortunately we can't exclude certain faces from the subdivision.
 		if layer_data.has_subds and add_subd_mod:
 			ob.modifiers.new(name="Subsurf", type='SUBSURF')
 
@@ -1945,7 +2006,7 @@ def check_if_should_reuse_img_texture(node_to_load, path_to_image):
     #extract just the image texture name using basename to get only the very right bit just the file name
     
     img_texture_file_name = os.path.basename(path_to_image)
-
+	
     #debug
     #print("img_texture_file_name:", img_texture_file_name)
 

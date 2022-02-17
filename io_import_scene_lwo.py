@@ -1327,8 +1327,11 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 
 		#if the material has transparency change it to alpha hashed
 		if surf_data.tran != 0.0:
-			curr_material.blend_method = 'HASHED'
-			curr_material.shadow_method = 'HASHED'
+			# all materials will use alpha hashed regardless
+			# because it is only for material preview and eevee
+			# for cycles blender ignores these settings
+			# curr_material.blend_method = 'HASHED'
+			# curr_material.shadow_method = 'HASHED'
 
 
 			#if it is has transparency it is probably fur add the vertex color tinting to it
@@ -1357,6 +1360,12 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 			
 			#mark material for image texture to connect into the mix_rgb_tint_node
 			is_fur_material = True
+		
+		# all materials will use alpha hashed regardless
+		# because it is only for material preview and eevee
+		# for cycles blender ignores these settings
+		curr_material.blend_method = 'HASHED'
+		curr_material.shadow_method = 'HASHED'
 
 		# surf_data.bl_mat.alpha = 1.0 - surf_data.tran
 		principled_bsdf_node.inputs["Alpha"].default_value = 1.0 - surf_data.tran

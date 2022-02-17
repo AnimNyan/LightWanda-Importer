@@ -18,6 +18,6 @@ Lightwanda Importer is a version of the original plugin made by Ken9 and Gert De
 
 This add on will import Lightwave files into Blender 3.0 with materials, uvs, vertex groups and textures connected via nodes in the Shader Editor.
 
-## How to use DBDFixSkeletons?
+## How to use LightWanda Importer?
 1. Install it with the above instructions.
 2. Press File > Import > Lightwave Object (.lwo)

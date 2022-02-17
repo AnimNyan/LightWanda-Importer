@@ -19,13 +19,13 @@
 from . import io_import_scene_lwo
 
 bl_info = {
-	"name": "Import LightWave Objects",
+	"name": "LightWanda Importer",
 	"author": "Ken Nign (Ken9) and Gert De Roost, Wisi, ASapphicKitsune and Anime Nyan",
-	"version": (1, 4, 1),
+	"version": (1, 4, 2),
 	"blender": (3, 0, 0),
 	"location": "File > Import > LightWave Object (.lwo)",
 	"description": "Imports a LWO file including any UV, Morph and Color maps. "
-		"Can convert Skelegons to an Armature.",
+		"Can convert Skeletons to an Armature.",
 	"warning": "",
 	"wiki_url": "http://wiki.blender.org/index.php/Extensions:2.6/Py/"
 		"Scripts/Import-Export/LightWave_Object",

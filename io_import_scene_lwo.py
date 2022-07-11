@@ -1339,12 +1339,10 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 			vertex_color_node = curr_material.node_tree.nodes.new('ShaderNodeVertexColor')
 
 			#position x, y
-			vertex_color_node.location = get_new_node_location(curr_material)
+			vertex_color_node.location = (-800, 0)
 
 			#create a mixRGB node
 			mix_rgb_tint_node = curr_material.node_tree.nodes.new('ShaderNodeMixRGB')
-
-			mix_rgb_tint_node.location = get_new_node_location(curr_material)
 
 			mix_rgb_tint_node.blend_type = 'MULTIPLY'
 			mix_rgb_tint_node.inputs["Fac"].default_value = 1
@@ -1457,7 +1455,7 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 				vertex_color_node_2 = curr_material.node_tree.nodes.new('ShaderNodeVertexColor')
 
 				#position x, y
-				vertex_color_node_2.location = get_new_node_location(curr_material)
+				vertex_color_node_2.location = (-900, -200)
 
 				#-------------------------------------------------------NEED TO CHANGE IS HARDCODED 
 				#-------------------------------------------------------
@@ -1573,7 +1571,7 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 				uv_map_node = curr_material.node_tree.nodes.new('ShaderNodeUVMap')
 
 				#position x, y
-				uv_map_node.location = get_new_node_location(curr_material)
+				uv_map_node.location = (-600, 150)
 
 				material_link(uv_map_node.outputs["UV"], image_texture_node.inputs["Vector"])
 				#image_texture_node.uv_layer = texture.uvname
@@ -2006,18 +2004,6 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 	# bpy.context.scene.update()
 
 	print("Done Importing LWO File")
-
-#return a different (x,y) position 
-#this depends upon how many nodes currently exist
-#so every node will return a different x and y position
-def get_new_node_location(curr_material):
-	count = len(curr_material.node_tree.nodes)
-	
-	x_location = count * -150
-	y_location = count * -20
-
-	return (x_location,y_location)
-
 
 
 from bpy.props import StringProperty, BoolProperty, CollectionProperty

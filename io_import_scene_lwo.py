@@ -1639,24 +1639,152 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 			# elif texture.axis == 2:
 			# 	tex_slot.mapping_x = 'Z'; tex_slot.mapping_y = 'Y'; tex_slot.mapping_z = 'X'
 
+		
+			# if texture.wrapw == texture.wraph or True: # Both match... we always use wrapw only, as there is no separate support.
+			# 	if curr_material.name == "eye_outer":
+			# 		print("hello")
+			# 	#tex.repeat_x = texture.wrpw # not sure about this
+			# 	#tex.repeat_y = texture.wrph
+			# 	if texture.wrapw == 0:
+			# 		image_texture_node.extension = 'CLIP'
+			# 	elif texture.wrapw == 1:
+			# 		image_texture_node.extension = 'REPEAT'
+			# 	elif texture.wrapw == 2: # Mirror
+			# 		image_texture_node.extension = 'REPEAT'
+			# 		tex.repeat_x = 2
+			# 		tex.repeat_y = 2
+			# 		if texture.wrapw == 2: # Mirror
+			# 			tex.use_mirror_x = True
+			# 		if texture.wraph == 2:
+			# 			tex.use_mirror_y = True
+			# 	if texture.wrapw == 3: # Edge
+			# 		image_texture_node.extension = 'EXTEND'
+
 			
-			if texture.wrapw == texture.wraph or True: # Both match... we always use wrapw only, as there is no separate support.
-				#tex.repeat_x = texture.wrpw # not sure about this
-				#tex.repeat_y = texture.wrph
+			#=======================ASapphicKitsune's solution implemented by Anime Nyan
+			#======= This is for dealing with certain textures which want to use a different extension mode
+			#e.g. Clip, Repeat, Extend and Mirror 
+			#and for tricky image textures which only want the extension mode to happen in one specific axis x,y,z 
+			#or in uv map terms u, v, w
+ 
+			# This is if the u, v and w (we don't use w because it is the z axis) 
+			# axes of the uv map should be wrapped
+			# the same way, hence we can just use blender's extension attribute
+			# on the image texture node, because it changes the u, v and w extension modes all together
+			if texture.wrapw == texture.wraph:
 				if texture.wrapw == 0:
 					image_texture_node.extension = 'CLIP'
 				elif texture.wrapw == 1:
 					image_texture_node.extension = 'REPEAT'
 				elif texture.wrapw == 2: # Mirror
 					image_texture_node.extension = 'REPEAT'
-					# tex.repeat_x = 2
-					# tex.repeat_y = 2
-					# if texture.wrapw == 2: # Mirror
-					# 	tex.use_mirror_x = True
-					# if texture.wraph == 2:
-					# 	tex.use_mirror_y = True
-				elif texture.wrapw == 3: # Edge
+					tex.repeat_x = 2
+					tex.repeat_y = 2
+					if texture.wrapw == 2: # Mirror
+						tex.use_mirror_x = True
+					if texture.wraph == 2:
+						tex.use_mirror_y = True
+				if texture.wrapw == 3: # Edge
 					image_texture_node.extension = 'EXTEND'
+
+
+			#======= This is if the u, v and w (we don't use w because it is the z axis) 
+			# axes of the uv map should be wrapped
+			# in different ways, e.g. we want to extend the last pixel on the v axis of a uv map
+			# but we want to use repeat the image on the u axis of a uv map
+
+			# hence we must use blender's extension attribute to "Extend"
+			# and then use the vector math node to restrict this Extend to a single axis
+			elif texture.wrapw != texture.wraph: 
+				#tex.repeat_x = texture.wrpw # not sure about this
+				#tex.repeat_y = texture.wrph
+				#debug
+				# if curr_material.name == "zFUR_sakai":
+				# 	print("hello")
+				
+				if texture.wrapw == 0:
+					print("There is a wrapw == 0 CLIP on material" + curr_material.name)
+					image_texture_node.extension = 'CLIP'
+				elif texture.wrapw == 1:
+					image_texture_node.extension = 'REPEAT'
+				elif texture.wrapw == 2: # Mirror
+					print("There is a wrapw == 2 Mirror on material" + curr_material.name)
+					image_texture_node.extension = 'REPEAT'
+					tex.repeat_x = 2
+					tex.repeat_y = 2
+					if texture.wrapw == 2: # Mirror
+						tex.use_mirror_x = True
+					if texture.wraph == 2:
+						tex.use_mirror_y = True
+						
+				if texture.wrapw == 3: # Edge
+					print("There is a wrapw == 3 Edge on material" + curr_material.name)
+					#set the image texture node to extend
+					image_texture_node.extension = 'EXTEND'
+					
+
+					# Create a vector math node
+					vector_math_node = curr_material.node_tree.nodes.new('ShaderNodeVectorMath')
+
+					# on the vector math node set vector math mode to wrap
+					vector_math_node.operation = "WRAP"
+
+					# set max x = 1 
+					vector_math_node.inputs[1].default_value[0] = 1
+
+					#set max y = 100 because tested with Valus from SOTC (Colossi number 1) 
+					# and needed greater than 1 value
+					vector_math_node.inputs[1].default_value[1] = 100
+
+
+					# vector math node set min to -100, this is a high value to be safe, but it may need to be higher
+					vector_math_node.inputs[2].default_value[0] = -100
+					
+
+					#====connect the vector math node between the uv map node and current image texture node
+					#e.g. material_link(image_texture_node_to_load.outputs["Color"], mix_rgb_tint_node.inputs["Color1"])
+
+					#connect the uv_map node output "UV" to the vector math node input "Vector" 
+					material_link(uv_map_node.outputs["UV"], vector_math_node.inputs["Vector"])
+
+					#connect the vector math node output "Vector" to the image texture node input "Vector"
+					material_link(vector_math_node.outputs["Vector"], image_texture_node.inputs["Vector"])
+
+
+				if texture.wraph == 3: # Edge
+					print("There is a wraph == 3 Edge on material" + curr_material.name)
+					#set the image texture node to extend
+					image_texture_node.extension = 'EXTEND'
+					
+
+					# Create a vector math node
+					vector_math_node = curr_material.node_tree.nodes.new('ShaderNodeVectorMath')
+
+					# on the vector math node set vector math mode to wrap
+					vector_math_node.operation = "WRAP"
+
+					# set max x = 1 
+					vector_math_node.inputs[1].default_value[0] = 1
+
+					#set max y = 100 because tested with Valus from SOTC (Colossi number 1) 
+					# and needed greater than 1 value
+					vector_math_node.inputs[1].default_value[1] = 100
+
+
+					# vector math node set min to -100, this is a high value to be safe, but it may need to be higher
+					vector_math_node.inputs[2].default_value[1] = -100
+
+					#====connect the vector math node between the uv map node and current image texture node
+					#e.g. material_link(image_texture_node_to_load.outputs["Color"], mix_rgb_tint_node.inputs["Color1"])
+
+					#connect the uv_map node output "UV" to the vector math node input "Vector" 
+					material_link(uv_map_node.outputs["UV"], vector_math_node.inputs["Vector"])
+
+					#connect the vector math node output "Vector" to the image texture node input "Vector"
+					material_link(vector_math_node.outputs["Vector"], image_texture_node.inputs["Vector"])
+				
+			
+					
 
 
 

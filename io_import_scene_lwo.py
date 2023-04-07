@@ -1795,8 +1795,8 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 		# Create the Vertex Normals.
 		if len(layer_data.vnorms) > 0:
 			print("Adding Vertex Normals")
-			for vi in layer_data.vnorms.keys():
-				me.vertices[vi].normal = layer_data.vnorms[vi]
+			#for vi in layer_data.vnorms.keys():
+			#	me.vertices[vi].normal = layer_data.vnorms[vi]
 
 		# Create the Split Vertex Normals.
 		if len(layer_data.lnorms) > 0:

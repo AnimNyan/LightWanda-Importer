@@ -21,7 +21,7 @@ from . import io_import_scene_lwo
 bl_info = {
 	"name": "LightWanda Importer",
 	"author": "Ken Nign (Ken9) and Gert De Roost, Wisi, ASapphicKitsune and Anime Nyan",
-	"version": (1, 5, 0),
+	"version": (1, 5, 1),
 	"blender": (3, 5, 0),
 	"location": "File > Import > LightWave Object (.lwo)",
 	"description": "Imports a LWO file including any UV, Morph and Color maps. "

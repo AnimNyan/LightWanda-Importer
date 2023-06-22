@@ -1958,9 +1958,9 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 		# Create the Shape Keys (LW's Endomorphs).
 		if len(layer_data.morphs) > 0:
 			print("Adding %d Shapes Keys" % len(layer_data.morphs))
-			ob.shape_key_add('Basis')	# Got to have a Base Shape.
+			ob.shape_key_add(name="Basis")	# Got to have a Base Shape.
 			for morph_key in layer_data.morphs:
-				skey = ob.shape_key_add(morph_key)
+				skey = ob.shape_key_add(name=morph_key)
 				dlist = layer_data.morphs[morph_key]
 				for pdp in dlist:
 					me.shape_keys.key_blocks[skey.name].data[pdp[0]].co = [pdp[1], pdp[2], pdp[3]]
@@ -2114,7 +2114,10 @@ def build_objects(object_layers, object_surfs, object_clips, object_tags, object
 	# With the objects made, setup the parents and re-adjust the locations.
 	if len(ob_dict.keys()) > 1:
 		empty = bpy.data.objects.new(name=object_name + "_empty", object_data=None)
+		
+		#parent all objects to the newly created empty
 		bpy.context.scene.objects.link(empty)
+
 	for ob_key in ob_dict:
 		if ob_dict[ob_key][1] != -1 and ob_dict[ob_key][1] in ob_dict:
 			parent_ob = ob_dict[ob_dict[ob_key][1]]
